@@ -26,7 +26,6 @@ int minYearTemp(const struct Temperature data[], int size);
 int maxYearTemp(const struct Temperature data[], int size);
 
 void sortByDate(struct Temperature data[], int size);
-
 void sortByTempIncrease(struct Temperature data[], int size);
 void sortByTempDecrease(struct Temperature data[], int size);
 
