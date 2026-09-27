@@ -1,6 +1,9 @@
 /*
     Курсовая работа
     Выполнил: Кольберт Руслан
+
+    Сделан динамический массив.
+    Использованы функции malloc(), realloc() и free(), см. в main() и addRecord()
 */
 
 
@@ -18,7 +21,14 @@ typedef struct
     uint8_t hour;       // hh - часы 2 цифры
     uint8_t minute;     // mm - минуты 2 цифры
     int8_t temperature; // temperature - целое число от -99 до 99
-} Temperature;
+} Record;
+
+typedef struct {
+    Record *rec;    // Указатель на массив структур
+    int size;        // Текущее количество элементов
+    int capacity;    // Выделенная емкость массива
+} Array;
+
 
 void printHelp(void)
 {
@@ -33,33 +43,34 @@ void printHelp(void)
     printf(".\\prog.exe -f data.csv  читать данные из CSV файла\n");
 }
 
-void printArray(const Temperature* data_ptr, int arr_size)
+void printArray(const Array* arr)
 {
     printf("Стр\tГод\t\tМес\tДн\tЧас\tМин\tТемп\n");
-    for (int i=0; i<arr_size; i++)
+
+    for (int i=0; i < arr->size; i++)
     {
         printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
             i,
-            (data_ptr + i) ->year,
-            data_ptr[i].month,
-            data_ptr[i].day,
-            data_ptr[i].hour,
-            data_ptr[i].minute,
-            data_ptr[i].temperature);
+            arr->rec[i].year,
+            arr->rec[i].month,
+            arr->rec[i].day,
+            arr->rec[i].hour,
+            arr->rec[i].minute,
+            arr->rec[i].temperature);
     }
 }
 
-int avgMonthTemp(const Temperature* data_ptr, int arr_size, uint8_t month)
+int avgMonthTemp(const Array* arr, uint8_t month)
 {
     int sum = 0;
-    float avg;
+    
     int count = 0;
 
-    for (int i=0; i<arr_size; i++)
+    for (int i=0; i < arr->size; i++)
     {
-        if ((data_ptr+i)->month == month)
+        if (arr->rec[i].month == month)
         {
-            sum += (data_ptr+i)->temperature;
+            sum += arr->rec[i].temperature;
             count++;
         }
     }
@@ -70,33 +81,32 @@ int avgMonthTemp(const Temperature* data_ptr, int arr_size, uint8_t month)
     }
     else 
     {
-        avg = (float)sum / count;
-        //printf("sum %d\n", sum);
-        //printf("count %d\n", count);
+        float avg = (float)sum / count;
         printf("\nСредняя температура за месяц %d: %.1f\n", month, avg);
+        return avg;
     }
 
-    return avg;
+    
 }
 
-int minMonthTemp(const Temperature* data_ptr, int arr_size, uint8_t month)
+int minMonthTemp(const Array* arr, uint8_t month)
 {
     int min;
     int count = 0;
     int init_flag = 0;
 
-    for (int i=0; i<arr_size; i++)
+    for (int i=0; i < arr->size; i++)
     {
-        if ((data_ptr+i)->month == month)
+        if (arr->rec[i].month == month)
         {
             if (!init_flag)
             {
-                min = (data_ptr+i)->temperature;
+                min = arr->rec[i].temperature;
                 init_flag = 1;
             }
-            else  if ((data_ptr+i)->temperature < min)
+            else  if (arr->rec[i].temperature < min)
             {
-                min = (data_ptr+i)->temperature;
+                min = arr->rec[i].temperature;
             }
 
             count++;
@@ -110,29 +120,30 @@ int minMonthTemp(const Temperature* data_ptr, int arr_size, uint8_t month)
     else 
     {
         printf("\nМинимальная температура за месяц %d: %d\n", month, min);
+        return min;
     }
 
-    return min;
+    
 }
 
-int maxMonthTemp(const Temperature* data_ptr, int arr_size, uint8_t month)
+int maxMonthTemp(const Array* arr, uint8_t month)
 {
     int max;
     int count = 0;
     int init_flag = 0;
 
-    for (int i=0; i<arr_size; i++)
+    for (int i=0; i < arr->size; i++)
     {
-        if ((data_ptr+i)->month == month)
+        if (arr->rec[i].month == month)
         {
             if (!init_flag)
             {
-                max = (data_ptr+i)->temperature;
+                max = arr->rec[i].temperature;
                 init_flag = 1;
             }
-            else  if ((data_ptr+i)->temperature > max)
+            else  if (arr->rec[i].temperature > max)
             {
-                max = (data_ptr+i)->temperature;
+                max = arr->rec[i].temperature;
             }
 
             count++;
@@ -146,22 +157,20 @@ int maxMonthTemp(const Temperature* data_ptr, int arr_size, uint8_t month)
     else 
     {
         printf("\nМаксимальная температура за месяц %d: %d\n", month, max);
+        return max;
     }
-
-    return max;
 }
 
-int avgYearTemp(const Temperature* data_ptr, int arr_size, uint16_t year)
+int avgYearTemp(const Array* arr, uint16_t year)
 {
     int sum = 0;
-    float avg;
     int count = 0;
 
-    for (int i=0; i<arr_size; i++)
+    for (int i=0; i < arr->size; i++)
     {
-        if ((data_ptr+i)->year == year)
+        if (arr->rec[i].year == year)
         {
-            sum += (data_ptr+i)->temperature;
+            sum += arr->rec[i].temperature;
             count++;
         }
     }
@@ -172,33 +181,30 @@ int avgYearTemp(const Temperature* data_ptr, int arr_size, uint16_t year)
     }
     else 
     {
-        avg = (float)sum / count;
-        //printf("sum %d\n", sum);
-        //printf("count %d\n", count);
+        float avg = (float)sum / count;
         printf("\nСредняя температура за год %d: %.1f\n", year, avg);
+        return avg;
     }
-
-    return avg;
 }
 
-int minYearTemp(const Temperature* data_ptr, int arr_size, uint16_t year)
+int minYearTemp(const Array* arr, uint16_t year)
 {
     int min;
     int count = 0;
     int init_flag = 0;
 
-    for (int i=0; i<arr_size; i++)
+    for (int i=0; i < arr->size; i++)
     {
-        if ((data_ptr+i)->year == year)
+        if (arr->rec[i].year == year)
         {
             if (!init_flag)
             {
-                min = (data_ptr+i)->temperature;
+                min = arr->rec[i].temperature;
                 init_flag = 1;
             }
-            else  if ((data_ptr+i)->temperature < min)
+            else if (arr->rec[i].temperature < min)
             {
-                min = (data_ptr+i)->temperature;
+                min = arr->rec[i].temperature;
             }
 
             count++;
@@ -212,29 +218,28 @@ int minYearTemp(const Temperature* data_ptr, int arr_size, uint16_t year)
     else 
     {
         printf("\nМинимальная температура за год %d: %d\n", year, min);
+        return min;
     }
-
-    return min;
 }
 
-int maxYearTemp(const Temperature* data_ptr, int arr_size, uint16_t year)
+int maxYearTemp(const Array* arr, uint16_t year)
 {
     int max;
     int count = 0;
     int init_flag = 0;
 
-    for (int i=0; i<arr_size; i++)
+    for (int i=0; i < arr->size; i++)
     {
-        if ((data_ptr+i)->year == year)
+        if (arr->rec[i].year == year)
         {
             if (!init_flag)
             {
-                max = (data_ptr+i)->temperature;
+                max = arr->rec[i].temperature;
                 init_flag = 1;
             }
-            else  if ((data_ptr+i)->temperature > max)
+            else  if (arr->rec[i].temperature > max)
             {
-                max = (data_ptr+i)->temperature;
+                max = arr->rec[i].temperature;
             }
 
             count++;
@@ -248,15 +253,14 @@ int maxYearTemp(const Temperature* data_ptr, int arr_size, uint16_t year)
     else 
     {
         printf("\nМаксимальная температура за год %d: %d\n", year, max);
+        return max;
     }
-
-    return max;
 }
 
 int compareByTempIncrease(const void* a, const void* b) 
 {
-    const Temperature* p1 = (const Temperature*)a;
-    const Temperature* p2 = (const Temperature*)b;
+    const Record* p1 = (const Record*)a;
+    const Record* p2 = (const Record*)b;
     
     return p1->temperature - p2->temperature;   // возрастание
     //return p2->temperature - p1->temperature; // убывание
@@ -264,17 +268,17 @@ int compareByTempIncrease(const void* a, const void* b)
 
 int compareByTempDecrease(const void* a, const void* b) 
 {
-    const Temperature* p1 = (const Temperature*)a;
-    const Temperature* p2 = (const Temperature*)b;
+    const Record* p1 = (const Record*)a;
+    const Record* p2 = (const Record*)b;
     
     //return p1->temperature - p2->temperature;   // возрастание
     return p2->temperature - p1->temperature; // убывание
 }
 
-int compareByDate(const void* a, const void* b) 
+int compareByDateIncrease(const void* a, const void* b) 
 {
-    const Temperature* p1 = (const Temperature*)a;
-    const Temperature* p2 = (const Temperature*)b;
+    const Record* p1 = (const Record*)a;
+    const Record* p2 = (const Record*)b;
     
     if (p1->year != p2->year)   return p1->year - p2->year;
     if (p1->month != p2->month) return p1->month - p2->month;
@@ -283,32 +287,64 @@ int compareByDate(const void* a, const void* b)
     return p1->minute - p2->minute;
 }
 
-void sortByDate(Temperature* data, int arr_size)
+int compareByDateDecrease(const void* a, const void* b) 
 {
-    qsort(data, arr_size, sizeof(Temperature), compareByDate);
+    const Record* p1 = (const Record*)a;
+    const Record* p2 = (const Record*)b;
+    
+    if (p1->year != p2->year)   return p2->year - p1->year;
+    if (p1->month != p2->month) return p2->month - p1->month;
+    if (p1->day != p2->day)     return p2->day - p1->day;
+    if (p1->hour != p2->hour)   return p2->hour - p1->hour;
+    return p2->minute - p1->minute;
+}
+
+void sortByDateIncrease(Array *arr)
+{
+    qsort(arr->rec, arr->size, sizeof(Record), compareByDateIncrease);
+    
+    printf("\nПосле сортировки по возрастанию даты:\n");
+    printArray(arr);
+}
+
+void sortByDateDecrease(Array *arr)
+{
+    qsort(arr->rec, arr->size, sizeof(Record), compareByDateDecrease);
     
     printf("\nПосле сортировки по убыванию даты:\n");
-    printArray(data, arr_size);
+    printArray(arr);
 }
 
-void sortByTempIncrease(Temperature* data, int arr_size)
+void sortByTempIncrease(Array *arr)
 {
-    qsort(data, arr_size, sizeof(Temperature), compareByTempIncrease);
+    qsort(arr->rec, arr->size, sizeof(Record), compareByTempIncrease);
     
     printf("\nПосле сортировки по возрастанию температуры:\n");
-    printArray(data, arr_size);
+    printArray(arr);
 }
 
-void sortByTempDecrease(Temperature* data, int arr_size)
+void sortByTempDecrease(Array *arr)
 {
-    qsort(data, arr_size, sizeof(Temperature), compareByTempDecrease);
+    qsort(arr->rec, arr->size, sizeof(Record), compareByTempDecrease);
     
     printf("\nПосле сортировки по убыванию температуры:\n");
-    printArray(data, arr_size);
+    printArray(arr);
 }
 
-void addRecord( Temperature* data,
-                int *size,
+void initArray(Array *arr)
+{
+    arr->size = 0;
+    arr->capacity = 2;
+    arr->rec = (Record*)malloc(arr->capacity * sizeof(Record));
+
+    if (arr->rec == NULL)
+    {
+        printf("Ошибка выделения памяти!\n");
+        exit(1);
+    }
+}
+
+void addRecord( Array *arr,
                 uint16_t year,
                 uint8_t month,
                 uint8_t day,
@@ -316,65 +352,127 @@ void addRecord( Temperature* data,
                 uint8_t minute,
                 int8_t temperature)
 {
-    //printf("\nВедите данные через пробел: год месяц день час минута температура\n");
-    data[*size].year = year;
-    data[*size].month = month;
-    data[*size].day = day;
-    data[*size].hour = hour;
-    data[*size].minute = minute;
-    data[*size].temperature = temperature;
+    if (arr->size >= arr->capacity)
+    {
+        arr->capacity *= 2;
+        Record *newPtr = (Record*)realloc(arr->rec, arr->capacity * sizeof(Record));
+        
+        if (newPtr == NULL)
+        {
+            printf("Ошибка расширения памяти realloc! Запись не добавлена");
+            return;
+        }
+        
+        arr->rec = newPtr;
+    }
 
-    (*size)++;
+    int i = arr->size;
+    arr->rec[i].year = year;
+    arr->rec[i].month = month;
+    arr->rec[i].day = day;
+    arr->rec[i].hour = hour;
+    arr->rec[i].minute = minute;
+    arr->rec[i].temperature = temperature;
 
-    printArray(data, *size);
+    printf("Запись [%d]: %d-%d-%d %d:%d T: %d\n",
+        arr->size,
+        arr->rec[i].year,
+        arr->rec[i].month,
+        arr->rec[i].day,
+        arr->rec[i].hour,
+        arr->rec[i].minute,
+        arr->rec[i].temperature = temperature);
+
+    arr->size++;
 }
 
+void freeMemory(Array* arr)
+{
+    free(arr->rec);
+}
 
-//============= MAIN =============
+void readCSV(Array* arr, const char *filename)
+{
+    FILE *file = fopen(filename, "r");
+
+    if (file == NULL)
+    {
+        printf("\nНе удалось открыть файл %s\n", filename);
+        return;
+    }
+    else
+    {
+        printf("\nФаил %s открыт\n", filename);
+
+        char string[512]; // Буфер для хранения одной строки файла
+
+        // Читаем файл строго построчно до самого конца
+        while (fgets(string, sizeof(string), file) != NULL)
+        {
+            int y, m, d, h, min, t;
+
+            // Разбираем строку. Обратите внимание на пробелы перед %d — 
+            // они заставляют sscanf игнорировать любые пробелы вокруг точек с запятой.
+            int stringCounter = sscanf(string, " %d ; %d ; %d ; %d ; %d ; %d", &y, &m, &d, &h, &min, &t);
+
+            // Проверяем, что успешно считались ВСЕ 6 чисел
+            if (stringCounter == 6)
+            {
+                addRecord(arr, y, m, d, h, min, t);
+            }
+            else
+            {
+                // Если в файле есть пустые строки или заголовок, sscanf вернет меньше 6.
+                // Программа не зависнет, а просто пропустит эту строку.
+                printf("Пропущена некорректная строка или заголовок\n");
+            }
+        }
+    }
+    fclose(file);
+    printf("\nФаил %s закрыт\n", filename);
+}
+
+//=============================== MAIN ===============================
 int main(void)
 {
     setlocale(LC_ALL, "en_US.UTF-8");
-    
+
     //printHelp();
-    
-    Temperature data[] =
+
+    Array arr;
+    arr.size = 0;
+    arr.capacity = 2;
+    arr.rec = (Record*)malloc(arr.capacity * sizeof(Record));
+
+    if (arr.rec == NULL)
     {
-        {2024, 1, 1,  0,  0,   -10},
-        {2024, 1, 5,  6,  30,  -12},
-        {2024, 1, 10, 12,  0,  -3},
-        {2024, 1, 22, 18, 15,  -6},
+        printf("Ошибка выделения памяти!\n");
+        return 1;
+    }
 
-        {2024, 3, 3,  0,  0,   3},
-        {2024, 3, 3,  6,  15,   5},
-        {2024, 3, 17, 12,  25,   -5},
-        {2024, 3, 26, 18,  5,   0},
-
-        {2024, 2, 2,  0,  45,  -5},
-        {2024, 2, 9,  6,  25,  0},
-        {2024, 2, 12, 12,  34,   2},
-        {2024, 2, 28, 18,  12,   -1}
-    };
-
-    int arr_size = sizeof(data) / sizeof(data[0]);
-    //printf("размер массива  %d\n", arr_size);
+    //initArray(&arr);
     
-    printArray(data, arr_size);
+    readCSV(&arr, "temperature_small.csv");
+    //readCSV(&arr, "temperature_big.csv");
+    //readCSV(&arr, "test.txt");
 
-    //avgMonthTemp(data, arr_size, 2);
-    //minMonthTemp(data, arr_size, 2);
-    //maxMonthTemp(data, arr_size, 2);
+    //printArray(&arr);
 
-    //avgYearTemp(data, arr_size, 2024);
-    //minYearTemp(data, arr_size, 2024);
-    //maxYearTemp(data, arr_size, 2024);
+    avgMonthTemp(&arr, 2);
+    minMonthTemp(&arr, 2);
+    maxMonthTemp(&arr, 2);
 
-    sortByDate(data, arr_size);
-    //sortByTempIncrease(data, arr_size);
-    //sortByTempDecrease(data, arr_size);
-    
-    addRecord(data, &arr_size, 2024, 4, 1, 12, 0, 15);
-    
+    avgYearTemp(&arr, 2021);
+    minYearTemp(&arr, 2021);
+    maxYearTemp(&arr, 2021);
+
+    sortByDateDecrease(&arr);
+    sortByTempIncrease(&arr);
+    sortByTempDecrease(&arr);
+    sortByDateIncrease(&arr);
 
     //getchar(); // Ждет нажатия Enter
+
+    freeMemory(&arr);
     return 0;
 }
