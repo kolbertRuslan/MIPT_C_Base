@@ -21,6 +21,9 @@ mingw32-make
 .\prog.exe -f temperature_small.csv -s d d      (sortByDateDecrease) отсортировать данные по убыванию даты
 .\prog.exe -f temperature_small.csv -s t i      (sortByTempIncrease) отсортировать данные по возрастанию температуры
 .\prog.exe -f temperature_small.csv -s t d      (sortByTempDecrease) отсортировать данные по убыванию температуры
+
+Примечание:
+.\prog.exe -f temperature_big.csv - Чтение большого файла работает, но оч долго выполняется
 */
 
 
