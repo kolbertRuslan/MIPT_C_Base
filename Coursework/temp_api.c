@@ -2,15 +2,18 @@
 
 void printHelp(void)
 {
-    printf("\nКурсовая работа\n");
-    printf("Выполнил: Кольберт Руслан\n\n");
-    printf("Команды для терминала VS Code:\n\n");
-    printf("mingw32-make            собрать проект\n");
-    printf(".\\prog.exe -h           показать справку\n");
-    printf(".\\prog.exe -m 1         статистика только за указанный месяц\n");
-    printf(".\\prog.exe -m 2\n");
-    printf(".\\prog.exe -m 3\n");
-    printf(".\\prog.exe -f data.csv  читать данные из CSV файла\n");
+    printf("Введите одну из перечисленных команд:\n");
+    printf(".\\prog.exe                                     запустить программу без действий\n");
+    printf(".\\prog.exe -h                                  показать справку\n");
+    printf(".\\prog.exe -f temperature_small.csv            прочитать данные из указанного файла\n");
+    printf(".\\prog.exe -f temperature_small.csv -p         напечатать массив прочитанных данных\n");
+    printf(".\\prog.exe -f temperature_small.csv -m 1       вывести статистику температуры за указанный месяц 1-12\n");
+    printf(".\\prog.exe -f temperature_small.csv -y 2021    вывести статистику температуры за указанный год\n");
+    printf(".\\prog.exe -f temperature_small.csv -s d i     (sortByDateIncrease) отсортировать данные по возрастанию даты\n");
+    printf(".\\prog.exe -f temperature_small.csv -s d d     (sortByDateDecrease) отсортировать данные по убыванию даты\n");
+    printf(".\\prog.exe -f temperature_small.csv -s t i     (sortByTempIncrease) отсортировать данные по возрастанию температуры\n");
+    printf(".\\prog.exe -f temperature_small.csv -s t d     (sortByTempDecrease) отсортировать данные по убыванию температуры\n");
+    printf("\n");
 }
 
 void printArray(const Array* arr)
@@ -34,7 +37,6 @@ void printArray(const Array* arr)
 int avgMonthTemp(const Array* arr, uint8_t month)
 {
     int sum = 0;
-    
     int count = 0;
 
     for (int i=0; i < arr->size; i++)
@@ -53,11 +55,9 @@ int avgMonthTemp(const Array* arr, uint8_t month)
     else 
     {
         float avg = (float)sum / count;
-        printf("\nСредняя температура за месяц %d: %.1f\n", month, avg);
+        printf("Средняя температура:        %.1f\n", avg);
         return avg;
     }
-
-    
 }
 
 int minMonthTemp(const Array* arr, uint8_t month)
@@ -90,7 +90,7 @@ int minMonthTemp(const Array* arr, uint8_t month)
     }
     else 
     {
-        printf("\nМинимальная температура за месяц %d: %d\n", month, min);
+        printf("Минимальная температура:    %d\n", min);
         return min;
     }
 
@@ -127,7 +127,7 @@ int maxMonthTemp(const Array* arr, uint8_t month)
     }
     else 
     {
-        printf("\nМаксимальная температура за месяц %d: %d\n", month, max);
+        printf("Максимальная температура:   %d\n", max);
         return max;
     }
 }
@@ -148,12 +148,12 @@ int avgYearTemp(const Array* arr, uint16_t year)
 
     if (count == 0)
     {
-        printf("\nНет данных за год %d\n", year);
+        printf("Нет данных за год %d\n", year);
     }
     else 
     {
         float avg = (float)sum / count;
-        printf("\nСредняя температура за год %d: %.1f\n", year, avg);
+        printf("Средняя температура:        %.1f\n", avg);
         return avg;
     }
 }
@@ -184,11 +184,11 @@ int minYearTemp(const Array* arr, uint16_t year)
 
     if (count == 0)
     {
-        printf("\nНет данных за год %d\n", year);
+        printf("Нет данных за год %d\n", year);
     }
     else 
     {
-        printf("\nМинимальная температура за год %d: %d\n", year, min);
+        printf("Минимальная температура:    %d\n", min);
         return min;
     }
 }
@@ -219,11 +219,11 @@ int maxYearTemp(const Array* arr, uint16_t year)
 
     if (count == 0)
     {
-        printf("\nНет данных за год %d\n", year);
+        printf("Нет данных за год %d\n", year);
     }
     else 
     {
-        printf("\nМаксимальная температура за год %d: %d\n", year, max);
+        printf("Максимальная температура:   %d\n", max);
         return max;
     }
 }
@@ -373,32 +373,28 @@ void readCSV(Array* arr, const char *filename)
     }
     else
     {
-        printf("\nФаил %s открыт\n", filename);
+        printf("Фаил %s открыт\n", filename);
+        printf("Считывание записей:\n");
 
         char string[512]; // Буфер для хранения одной строки файла
 
-        // Читаем файл строго построчно до самого конца
+        // Читаю файл построчно
         while (fgets(string, sizeof(string), file) != NULL)
         {
             int y, m, d, h, min, t;
-
-            // Разбираем строку. Обратите внимание на пробелы перед %d — 
-            // они заставляют sscanf игнорировать любые пробелы вокруг точек с запятой.
             int stringCounter = sscanf(string, " %d ; %d ; %d ; %d ; %d ; %d", &y, &m, &d, &h, &min, &t);
 
-            // Проверяем, что успешно считались ВСЕ 6 чисел
             if (stringCounter == 6)
             {
                 addRecord(arr, y, m, d, h, min, t);
             }
             else
             {
-                // Если в файле есть пустые строки или заголовок, sscanf вернет меньше 6.
-                // Программа не зависнет, а просто пропустит эту строку.
-                printf("Пропущена некорректная строка или заголовок\n");
+                printf("Пропущена некорректная строка\n");
             }
         }
     }
     fclose(file);
-    printf("\nФаил %s закрыт\n", filename);
+    printf("Записи считаны\n");
+    printf("Фаил %s закрыт\n", filename);
 }
